@@ -33,6 +33,7 @@
             // Form1
             // 
             AutoScaleMode = AutoScaleMode.None;
+            AutoSize = true;
             ClientSize = new Size(1130, 1094);
             ImeMode = ImeMode.On;
             Name = "Form1";

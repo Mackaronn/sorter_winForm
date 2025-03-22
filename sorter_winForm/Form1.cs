@@ -30,24 +30,32 @@ namespace sorter_winForm
         string name_save = "save.txt";
         bool IsContinue = false;
         string image_save;
+        int allOperation = 0;
+        int complitedOperation = 0;
 
+        //вход 
         private void Form1_Load(object sender, EventArgs e)
         {
             Size = new Size(860, 640);
-            MainMenu();
+            WinMainMenu();
         }
-        private void Sorting()
+        //экран сортировки
+        private void WinSorting()
         {
+            WriteProgress();
             Button btn1 = new Button();
             Button btn2 = new Button();
             SplitContainer splitContainer1;
             SplitContainer splitContainer2;
+            SplitContainer splitContainer3;
             PictureBox pictureBox1;
             PictureBox pictureBox2;
+            Rectangle rectangle;
 
             Controls.Clear();
             splitContainer1 = new SplitContainer();
             splitContainer2 = new SplitContainer();
+            splitContainer3 = new SplitContainer();
             pictureBox1 = new PictureBox();
             pictureBox2 = new PictureBox();
             TableLayoutPanel tableLayoutPanel = new TableLayoutPanel();
@@ -68,11 +76,11 @@ namespace sorter_winForm
             // splitContainer2
             splitContainer2.Dock = DockStyle.Fill;
             splitContainer2.Location = new Point(0, 0);
-            splitContainer2.Name = "splitContainer2";
+            splitContainer2.Name = "splitContainer3";
             splitContainer2.Size = new Size(ClientSize.Width, splitContainer1.SplitterDistance);
             splitContainer2.SplitterDistance = ClientSize.Width / 2;
-            splitContainer2.BorderStyle = BorderStyle.Fixed3D;
             splitContainer2.IsSplitterFixed = true;
+            splitContainer2.BorderStyle = BorderStyle.Fixed3D;
             // splitContainer2.Panel1
             splitContainer2.Panel1.Controls.Add(pictureBox1);
             splitContainer2.Panel1.Controls.Add(lable1);
@@ -142,6 +150,97 @@ namespace sorter_winForm
             pictureBox1.MouseClick += (obj, e) => PressImage1(pictureBox1, pictureBox2, e);
             pictureBox2.MouseClick += (obj, e) => PressImage2(pictureBox2, pictureBox1, e);
         }
+        //экран главного меню
+        private void WinMainMenu()
+        {
+            Button btn1;
+            Button btn2;
+            Controls.Clear();
+            btn1 = new Button();
+            btn1.Size = new Size(410, 88);
+            btn1.Location = new Point(ClientSize.Width / 2 - btn1.Width / 2, ClientSize.Height / 2 - btn1.Height / 2 - 100);
+            btn1.Name = "button1";
+            btn1.Text = "Начать сначала";
+            btn1.Click += (obj, e) => StartButton_Click();
+            Controls.Add(btn1);
+
+            btn2 = new Button();
+            btn2.Size = new Size(410, 88);
+            btn2.Location = new Point(ClientSize.Width / 2 - btn2.Width / 2, ClientSize.Height / 2 - btn2.Height / 2 + 100);
+            btn2.Name = "button2";
+            btn2.Text = "Продолжить";
+            btn2.MouseDown += (obj, e) => ContinueButton_Click(e);
+            Controls.Add(btn2);
+            btn1.Anchor = AnchorStyles.Top;
+            btn2.Anchor = AnchorStyles.Top;
+        }
+        //экран ввода пути директории для сортировки
+        private void WinEnteringPathFile()
+        {
+            Button btn2;
+            textBox.BorderStyle = BorderStyle.FixedSingle;
+            textBox.Size = new Size(ClientSize.Width / 4 * 3, 40);
+            textBox.Location = new Point(ClientSize.Width / 2 - textBox.Width / 2, ClientSize.Height / 2 - textBox.Height / 2 - 100);
+            textBox.Name = "textBox1";
+            textBox.TabIndex = 0;
+            textBox.Text = "Введите путь";
+            textBox.MouseClick += textBox1_TextClick;
+            textBox.KeyPress += FileLoad;
+            Controls.Add(textBox);
+            textBox.Anchor = AnchorStyles.Top;
+
+
+            btn2 = new Button();
+            btn2.Size = new Size(410, 88);
+            btn2.Location = new Point(ClientSize.Width / 2 - btn2.Width / 2, ClientSize.Height / 2 - btn2.Height / 2 + 100);
+            btn2.Name = "button2";
+            btn2.Text = "Назад";
+            btn2.Click += (obj, e) => WinMainMenu();
+            Controls.Add(btn2);
+            btn2.Anchor = AnchorStyles.Top;
+        }
+        //экран результатов сортировки
+        private void Finish()
+        {
+            WriteProgress(100);
+            SaveResult();
+            WindowMassage("Все файлы отсортированы и сохранены внутри директории!");
+
+            Controls.Clear();
+            TableLayoutPanel tableLayoutPanel = new TableLayoutPanel();
+            Controls.Add(tableLayoutPanel);
+            tableLayoutPanel.Dock = DockStyle.Fill;
+            tableLayoutPanel.ColumnCount = 3;
+            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45));
+            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45));
+            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 10));
+            tableLayoutPanel.RowCount = rankList.Count >= 10 ? 10 : rankList.Count;
+            for (int i = 0; i < tableLayoutPanel.RowCount; i++)
+            {
+                Label nameFile = new Label();
+                nameFile.Text = rankList[i];
+                nameFile.Dock = DockStyle.Fill;
+                tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 1f / tableLayoutPanel.RowCount));
+                tableLayoutPanel.Controls.Add(nameFile, 0, i);
+                try
+                {
+                    PictureBox pictureBox = new PictureBox();
+                    pictureBox.Image = Image.FromFile(path_directory + "\\" + rankList[i]);
+                    pictureBox.Dock = DockStyle.Fill;
+                    pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+                    tableLayoutPanel.Controls.Add(pictureBox, 1, i);
+
+                }
+                catch { }
+                Button button = new Button();
+                button.Text = "Open";
+                button.Name = path_result_directory + $"\\{i + 1}_" + rankList[i];
+                button.Dock = DockStyle.Fill;
+                button.MouseDown += (obj, e) => OpenFile(obj, e);
+                tableLayoutPanel.Controls.Add(button, 2, i);
+            }
+        }
+        //нажатие на изображения
         private void PressImage1(object sender, PictureBox pictureBox2, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -152,6 +251,9 @@ namespace sorter_winForm
             if (e.Button == MouseButtons.Left)
                 SortMethod((PictureBox)sender, pictureBoxe1);
         }
+        //
+
+        //сортировка 
         private void SortMethod(PictureBox first, PictureBox second)
         {
             if (rankList.Count != numItem)
@@ -182,54 +284,6 @@ namespace sorter_winForm
             if (rankList.Count == numItem)
             {
                 Finish();
-            }
-        }
-        private void Finish()
-        {
-            SaveFiels();
-            WindowMassage("Все файлы отсортированы и сохранены внутри директории!");
-
-            Controls.Clear();
-            TableLayoutPanel tableLayoutPanel = new TableLayoutPanel();
-            Controls.Add(tableLayoutPanel);
-            tableLayoutPanel.Dock = DockStyle.Fill;
-            tableLayoutPanel.ColumnCount = 3;
-            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45));
-            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45));
-            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 10));
-            tableLayoutPanel.RowCount = rankList.Count >= 10 ? 10 : rankList.Count;
-            for (int i = 0; i < tableLayoutPanel.RowCount; i++)
-            {
-                Label nameFile = new Label();
-                nameFile.Text = rankList[i];
-                nameFile.Dock = DockStyle.Fill;
-                tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 1f / tableLayoutPanel.RowCount));
-                tableLayoutPanel.Controls.Add(nameFile, 0, i);
-                try
-                {
-                    PictureBox pictureBox = new PictureBox();
-                    pictureBox.Image = Image.FromFile(path_directory + "\\" + rankList[i]);
-                    pictureBox.Dock = DockStyle.Fill;
-                    pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
-                    tableLayoutPanel.Controls.Add(pictureBox, 1, i);
-
-                }
-                catch {}
-                Button button = new Button();
-                button.Text = "Open";
-                button.Name = path_result_directory + $"\\{i + 1}_" + rankList[i];
-                button.Dock = DockStyle.Fill;
-                button.MouseDown += (obj, e) => OpenFile(obj, e);
-                tableLayoutPanel.Controls.Add(button, 2, i);
-            }
-        }
-        private void OpenFile(Object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                Button button = (Button)sender;
-                string file = button.Name;
-                Process.Start(new ProcessStartInfo("explorer", file));
             }
         }
         private void NextStep(PictureBox pictureBox1, PictureBox pictureBox2)
@@ -292,34 +346,34 @@ namespace sorter_winForm
             //назначение новой первой кнопки
             SetMidleImage(pictureBox1);
         }
-        private void MainMenu()
-        {
-            Button btn1;
-            Button btn2;
-            Controls.Clear();
-            btn1 = new Button();
-            btn1.Size = new Size(410, 88);
-            btn1.Location = new Point(ClientSize.Width / 2 - btn1.Width / 2, ClientSize.Height / 2 - btn1.Height / 2 - 100);
-            btn1.Name = "button1";
-            btn1.Text = "Начать сначала";
-            btn1.Click += (obj, e) => StartButton_Click();
-            Controls.Add(btn1);
+        //
 
-            btn2 = new Button();
-            btn2.Size = new Size(410, 88);
-            btn2.Location = new Point(ClientSize.Width / 2 - btn2.Width / 2, ClientSize.Height / 2 - btn2.Height / 2 + 100);
-            btn2.Name = "button2";
-            btn2.Text = "Продолжить";
-            btn2.MouseDown += (obj, e) => ContinueButton_Click(e);
-            Controls.Add(btn2);
-            btn1.Anchor = AnchorStyles.Top;
-            btn2.Anchor = AnchorStyles.Top;
+        //изменение диапозона сортировки
+        private void ChangeRange(int begin, int end, PictureBox pictureBox2)
+        {
+            last_range = range;
+            range = new Point(begin, end);
+            name_last_file = pictureBox2.Text;
+            CountComplitedOperation();
+            WriteProgress();
         }
+        //нажатие на кнопку открывающая файл
+        private void OpenFile(Object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                Button button = (Button)sender;
+                string file = button.Name;
+                Process.Start(new ProcessStartInfo("explorer", file));
+            }
+        }
+        //нажатие на начало новой сортировки
         private void StartButton_Click()
         {
             Controls.Clear();
-            EnteringPathFile();
+            WinEnteringPathFile();
         }
+        //нажатие на кнопку "продолжить" (продолжает сортировку сохранённого сеанса)
         private void ContinueButton_Click(MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -361,38 +415,22 @@ namespace sorter_winForm
 
                     reader.Close();
                     IsContinue = true;
-                    Sorting();
-            }
+
+                    //подсчёт общего числа ходов и сделаных ходов
+                    allOperation = CountAllOperation(rankList.Count + allItemList.Count + 1); // rankList.Count + allItemList.Count + 1 = общее количество файлов 
+                    CountComplitedOperation();
+                    WriteProgress();
+                    //
+
+                    WinSorting();
+                }
                 catch
                 {
-                WindowMassage("Сохранений нет!", MessageBoxIcon.Error);
+                    WindowMassage("Сохранений нет!", MessageBoxIcon.Error);
+                }
             }
         }
-        }
-        private void EnteringPathFile()
-        {
-            Button btn2;
-            textBox.BorderStyle = BorderStyle.FixedSingle;
-            textBox.Size = new Size(ClientSize.Width / 4 * 3, 40);
-            textBox.Location = new Point(ClientSize.Width / 2 - textBox.Width / 2, ClientSize.Height / 2 - textBox.Height / 2 - 100);
-            textBox.Name = "textBox1";
-            textBox.TabIndex = 0;
-            textBox.Text = "Введите путь";
-            textBox.MouseClick += textBox1_TextClick;
-            textBox.KeyPress += FileLoad;
-            Controls.Add(textBox);
-            textBox.Anchor = AnchorStyles.Top;
-
-
-            btn2 = new Button();
-            btn2.Size = new Size(410, 88);
-            btn2.Location = new Point(ClientSize.Width / 2 - btn2.Width / 2, ClientSize.Height / 2 - btn2.Height / 2 + 100);
-            btn2.Name = "button2";
-            btn2.Text = "Назад";
-            btn2.Click += (obj, e) => MainMenu();
-            Controls.Add(btn2);
-            btn2.Anchor = AnchorStyles.Top;
-        }
+        //чтение файлов для сортировки
         private void FileLoad(object sender, KeyPressEventArgs e)
         {
             TextBox textBox = (TextBox)sender;
@@ -414,10 +452,11 @@ namespace sorter_winForm
                             path_directory = directory.FullName;
                             FileInfo[] files = directory.GetFiles();
                             numItem = files.Length;
-                            foreach (FileInfo file in files)
+                            for (int i = 0; i < numItem; i++)
                             {
-                                allItemList.Add(file.Name);
+                                allItemList.Add(files[i].Name);
                             }
+                            allOperation = CountAllOperation(numItem);
                         }
                     }
                     catch
@@ -425,7 +464,7 @@ namespace sorter_winForm
                         WindowMassage("В каталоге нет файлов.", MessageBoxIcon.Error);
                         return;
                     }
-                    Sorting();
+                    WinSorting();
                 }
                 else
                 {
@@ -434,6 +473,7 @@ namespace sorter_winForm
                 }
             }
         }
+        //нажатие на текстовое поле для ввода пути директории для сортировки
         private void textBox1_TextClick(object sender, MouseEventArgs e)
         {
             TextBox text_box = (TextBox)sender;
@@ -442,6 +482,7 @@ namespace sorter_winForm
                 text_box.Select(0, text_box.TextLength);
             }
         }
+        //вывод окна с сообщением
         private void WindowMassage(string message)
         {
             MessageBox.Show(
@@ -462,6 +503,9 @@ namespace sorter_winForm
                     MessageBoxDefaultButton.Button1,
                     MessageBoxOptions.RightAlign);
         }
+        //
+
+        //задание рандомного изображения
         private void SetRandomImage(PictureBox pictureBox)
         {
             string nameFile = allItemList[new Random().Next(0, allItemList.Count)];
@@ -486,6 +530,7 @@ namespace sorter_winForm
                 }
             }
         }
+        //хадание центранльного изображения из уже отсортированных элементов
         private void SetMidleImage(PictureBox pictureBox)
         {
             string nameFile = rankList[(range.Y - range.X + 1) / 2 + range.X - 1];
@@ -508,6 +553,7 @@ namespace sorter_winForm
                 }
             }
         }
+        //задание определённого изображения из дериктори
         private void SetImage(PictureBox pictureBox, string nameFile)
         {
             try
@@ -522,6 +568,7 @@ namespace sorter_winForm
                 VisibleText(pictureBox.Name, nameFile);
             }
         }
+        //сделать текс видимым (если перебирается не изображение)
         private void VisibleText(string name, string nameFile)
         {
             Label textBox;
@@ -535,9 +582,14 @@ namespace sorter_winForm
             }
             textBox.Text = nameFile;
         }
-        private void SaveFiels()
+        //сохранение результат сортировки файлов
+        private void SaveResult()
         {
             path_result_directory = path_directory + "\\Result";
+            for (int i = 1; Directory.Exists(path_result_directory); i++)
+            {
+                path_result_directory +=$"_{i}";
+            }
             for (int i = 0; i < rankList.Count; i++)
             {
                 Directory.CreateDirectory(path_result_directory);
@@ -551,6 +603,7 @@ namespace sorter_winForm
                 }
             }
         }
+        //нажатие на кнопку "сохранить" (сохранение промежуточного результата)
         private void SaveButton(PictureBox pictureBox,MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -585,6 +638,7 @@ namespace sorter_winForm
                 write.Close();
             }
         }
+        //нажатие на кнопку "назад" (один ход назад)
         private void RemoveButton(PictureBox pictureBox1, PictureBox pictureBox2, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left && rankList.Count != 0 && first_sort)
@@ -608,14 +662,33 @@ namespace sorter_winForm
                     SetMidleImage(pictureBox1);
                     SetImage(pictureBox2, name_last_file);
                 }
+                CountComplitedOperation();
+                WriteProgress();
             }
-           
         }
-        private void ChangeRange(int begin, int end, PictureBox pictureBox2)
+        //выводит прогресс отбора
+        private void WriteProgress()
         {
-            last_range = range;
-            range = new Point(begin, end);
-            name_last_file = pictureBox2.Text;
+            Text = (float)((int)((float)complitedOperation / (float)allOperation * 1000)) / 10f + "%";
+        }
+        private void WriteProgress(int progress)
+        {
+            Text = progress + "%";
+        }
+        //подсчёт прогресса
+        private void CountComplitedOperation()
+        {
+            complitedOperation = CountAllOperation(rankList.Count) + (int)MathF.Log2(rankList.Count / (range.Y - range.X + 1));
+        }
+        //посчёт общего количества ходов для завершения
+        private int CountAllOperation(int numberFile)
+        {
+            int result = 0;
+            for (int i = 0; i < numberFile; i++)
+            {
+                result += (int)MathF.Ceiling(MathF.Log2(i + 1));
+            }
+            return result;
         }
     }
 }
